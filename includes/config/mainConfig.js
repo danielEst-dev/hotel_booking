@@ -1,4 +1,4 @@
-require('dotenv').config({ path: `.env.${process.env.NODE_ENV || 'development'}` });
+require('dotenv').config();
 
 const REQUIRED = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'];
 const missing = REQUIRED.filter(key => !process.env[key]);
