@@ -1,0 +1,30 @@
+{
+  "name": "hotel_booking",
+  "version": "1.0.0",
+  "description": "Junior Developer Practical Test",
+  "homepage": "https://github.com/danielEst-dev/hotel_booking#readme",
+  "bugs": {
+    "url": "https://github.com/danielEst-dev/hotel_booking/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danielEst-dev/hotel_booking.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "build": "npm install",
+    "test": "jest",
+    "dev": "nodemon -e js server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "jest": "^30.3.0",
+    "nodemon": "^3.1.14"
+  }
+}
