@@ -8,7 +8,6 @@ const config = Object.freeze({
 	server: {
 		port: process.env.PORT || 3000,
 		nodeEnv: process.env.NODE_ENV || 'development',
-		allowedOrigins: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [],
 	},
 	db: {
 		host: process.env.DB_HOST,
