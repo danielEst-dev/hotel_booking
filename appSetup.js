@@ -1,12 +1,32 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
 const moment = require('moment');
 const { config } = require('./includes/config/mainConfig.js');
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// Security headers
+app.use(helmet());
+
+// CORS
+app.use(cors({
+	origin: config.server.allowedOrigins.length ? config.server.allowedOrigins : false,
+}));
+
+// Request logging
+app.use(morgan('combined'));
+
+// Rate limiting
+app.use(rateLimit({
+	windowMs: 15 * 60 * 1000,
+	max: 100,
+	standardHeaders: true,
+	legacyHeaders: false,
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

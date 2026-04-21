@@ -1,20 +1,41 @@
 const { app } = require('./appSetup.js');
 const { config } = require('./includes/config/mainConfig.js');
+const { pool } = require('./includes/db/db.js');
 const moment = require('moment');
 
 const PORT = config.server.port;
 
-const server = app.listen(PORT, () => {
-	console.log(`[${moment.utc().toISOString()}] Hotel Booking API running on port ${PORT} (${config.server.nodeEnv})`);
+let server;
+
+const start = async () => {
+	await pool.query('SELECT 1');
+	console.log(`[${moment.utc().toISOString()}] Database connection verified`);
+
+	server = app.listen(PORT, () => {
+		console.log(`[${moment.utc().toISOString()}] Hotel Booking API running on port ${PORT} (${config.server.nodeEnv})`);
+	});
+};
+
+start().catch(err => {
+	console.error(`[${moment.utc().toISOString()}] Startup failed:`, err.message);
+	process.exit(1);
 });
 
 // Graceful shutdown
 const shutdown = (signal) => {
 	console.log(`\n[${moment.utc().toISOString()}] ${signal} received — shutting down gracefully`);
-	server.close(() => {
+
+	const close = async () => {
+		await pool.end();
 		console.log(`[${moment.utc().toISOString()}] Server closed`);
 		process.exit(0);
-	});
+	};
+
+	if (server) {
+		server.close(() => close());
+	} else {
+		close();
+	}
 
 	// Force exit if server hasn't closed within 10 seconds
 	setTimeout(() => {
