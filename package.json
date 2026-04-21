@@ -13,7 +13,7 @@
   "license": "ISC",
   "author": "",
   "type": "commonjs",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "build": "npm install",
     "test": "jest",
