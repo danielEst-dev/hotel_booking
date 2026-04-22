@@ -51,7 +51,7 @@ const normalizeOptionalBoolean = (value) => {
 		return false;
 	}
 
-	return value;
+	return undefined;
 };
 
 module.exports = { buildPagination, normalizeOptionalNumber, normalizeOptionalBoolean };

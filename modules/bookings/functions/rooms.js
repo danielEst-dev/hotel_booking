@@ -62,7 +62,9 @@ const processCreateRoom = async ({ room_number, room_type, price_per_night, desc
 		return { success: true, data: result.rows[0] };
 	} catch (error) {
 		if (error && error.code === '23505') {
-			throw new Error('Room number already exists');
+			const err = new Error('Room number already exists');
+			err.statusCode = 409;
+			throw err;
 		}
 
 		throw error;
@@ -84,4 +86,74 @@ const processGetRoomById = async (id) => {
 	return { success: true, data: result.rows[0] };
 };
 
-module.exports = { processGetAllRooms, processCreateRoom, processGetRoomById };
+const processUpdateRoom = async (id, fields) => {
+	const setClauses = [];
+	const values = [];
+
+	if (fields.room_number !== undefined) {
+		values.push(fields.room_number);
+		setClauses.push(`room_number = $${values.length}`);
+	}
+
+	if (fields.room_type !== undefined) {
+		values.push(fields.room_type);
+		setClauses.push(`room_type = $${values.length}`);
+	}
+
+	if (fields.price_per_night !== undefined) {
+		values.push(fields.price_per_night);
+		setClauses.push(`price_per_night = $${values.length}`);
+	}
+
+	if (fields.description !== undefined) {
+		values.push(fields.description);
+		setClauses.push(`description = $${values.length}`);
+	}
+
+	if (fields.is_available !== undefined) {
+		values.push(fields.is_available);
+		setClauses.push(`is_available = $${values.length}`);
+	}
+
+	values.push(id);
+
+	try {
+		const result = await query(
+			`UPDATE rooms SET ${setClauses.join(', ')} WHERE id = $${values.length} AND is_active = TRUE RETURNING *`,
+			values
+		);
+
+		if (result.rows.length === 0) {
+			const err = new Error('Room not found');
+			err.statusCode = 404;
+			throw err;
+		}
+
+		return { success: true, data: result.rows[0] };
+	} catch (error) {
+		if (error && error.code === '23505') {
+			const err = new Error('Room number already exists');
+			err.statusCode = 409;
+			throw err;
+		}
+
+		throw error;
+	}
+};
+
+const processDeleteRoom = async (id) => {
+	const result = await query(
+		`UPDATE rooms SET is_active = FALSE WHERE id = $1 AND is_active = TRUE RETURNING id`,
+		[id]
+	);
+
+	if (result.rows.length === 0) {
+		const err = new Error('Room not found');
+		err.statusCode = 404;
+		throw err;
+	}
+
+	return { success: true };
+};
+
+module.exports = { processGetAllRooms, processCreateRoom, processGetRoomById, processUpdateRoom, processDeleteRoom };

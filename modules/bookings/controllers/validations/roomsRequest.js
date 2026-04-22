@@ -40,4 +40,26 @@ const validateGetRoomByIdRequest = (form) => {
 	return schema.validate(form, { abortEarly: false, strict: true });
 };
 
-module.exports = { validateGetAllRoomsRequest, validateCreateRoomRequest, validateGetRoomByIdRequest };
+const validateUpdateRoomRequest = (form) => {
+	const formShape = {
+		id: yup.number().integer().min(1).required(),
+		room_number: yup.string().optional(),
+		room_type: yup.string().optional(),
+		price_per_night: yup.number().min(0).optional(),
+		description: yup.string().optional(),
+		is_available: yup.boolean().optional(),
+	};
+
+	const schema = yup.object().shape(formShape).test(
+		'at-least-one-field',
+		'At least one field must be provided to update',
+		(value) => {
+			const { id, ...fields } = value;
+			return Object.values(fields).some((v) => v !== undefined);
+		}
+	);
+
+	return schema.validate(form, { abortEarly: false, strict: true });
+};
+
+module.exports = { validateGetAllRoomsRequest, validateCreateRoomRequest, validateGetRoomByIdRequest, validateUpdateRoomRequest };
