@@ -8,9 +8,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-// Mount bookings router
-// const bookingsRouter = require('./routers/bookingsRouter.js');
-// app.use('/bookings', bookingsRouter);
+const { router: bookingsRouter } = require('./routers/bookingsRouter.js');
+app.use('/bookings', bookingsRouter);
 
 // 404 handler
 app.use((req, res) => {
