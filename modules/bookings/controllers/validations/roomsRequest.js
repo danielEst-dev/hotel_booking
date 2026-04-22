@@ -19,4 +19,16 @@ const validateGetAllRoomsRequest = (form) => {
 	return schema.validate(form, { abortEarly: false, strict: true });
 };
 
-module.exports = { validateGetAllRoomsRequest };
+const validateCreateRoomRequest = (form) => {
+	const formShape = {
+		room_number: yup.string().required(),
+		room_type: yup.string().required(),
+		price_per_night: yup.number().min(0).required(),
+		description: yup.string().optional(),
+	};
+
+	const schema = yup.object().shape(formShape);
+	return schema.validate(form, { abortEarly: false, strict: true });
+};
+
+module.exports = { validateGetAllRoomsRequest, validateCreateRoomRequest };

@@ -50,4 +50,23 @@ const processGetAllRooms = async ({ page, limit, room_type, is_available, min_pr
 	};
 };
 
-module.exports = { processGetAllRooms };
+const processCreateRoom = async ({ room_number, room_type, price_per_night, description }) => {
+	try {
+		const result = await query(
+			`INSERT INTO rooms (room_number, room_type, price_per_night, description)
+			VALUES ($1, $2, $3, $4)
+			RETURNING *`,
+			[room_number, room_type, price_per_night, description ?? null]
+		);
+
+		return { success: true, data: result.rows[0] };
+	} catch (error) {
+		if (error && error.code === '23505') {
+			throw new Error('Room number already exists');
+		}
+
+		throw error;
+	}
+};
+
+module.exports = { processGetAllRooms, processCreateRoom };
