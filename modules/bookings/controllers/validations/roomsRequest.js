@@ -31,4 +31,13 @@ const validateCreateRoomRequest = (form) => {
 	return schema.validate(form, { abortEarly: false, strict: true });
 };
 
-module.exports = { validateGetAllRoomsRequest, validateCreateRoomRequest };
+const validateGetRoomByIdRequest = (form) => {
+	const formShape = {
+		id: yup.number().integer().min(1).required(),
+	};
+
+	const schema = yup.object().shape(formShape);
+	return schema.validate(form, { abortEarly: false, strict: true });
+};
+
+module.exports = { validateGetAllRoomsRequest, validateCreateRoomRequest, validateGetRoomByIdRequest };

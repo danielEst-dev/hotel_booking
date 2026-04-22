@@ -1,5 +1,5 @@
-const { processGetAllRooms, processCreateRoom } = require('../functions/rooms.js');
-const { validateGetAllRoomsRequest, validateCreateRoomRequest } = require('./validations/roomsRequest.js');
+const { processGetAllRooms, processCreateRoom, processGetRoomById } = require('../functions/rooms.js');
+const { validateGetAllRoomsRequest, validateCreateRoomRequest, validateGetRoomByIdRequest } = require('./validations/roomsRequest.js');
 const { normalizeOptionalNumber, normalizeOptionalBoolean } = require('../../../helpers/functions/customFunctions.js');
 
 const getAllRooms = async (req, res) => {
@@ -56,4 +56,25 @@ const createRoom = async (req, res) => {
 	}
 };
 
-module.exports = { getAllRooms, createRoom };
+const getRoomById = async (req, res) => {
+	try {
+		const id = Number(req.params.id);
+
+		await validateGetRoomByIdRequest({ id });
+
+		const result = await processGetRoomById(id);
+		return res.status(200).send({ ...result });
+	} catch (err) {
+		if (err?.name === 'ValidationError') {
+			return res.status(400).json({
+				success: false,
+				error: 'validation-error',
+				errors: err?.errors || [],
+			});
+		}
+
+		return res.status(err.statusCode || 400).send({ success: false, error: err.message });
+	}
+};
+
+module.exports = { getAllRooms, createRoom, getRoomById };

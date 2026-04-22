@@ -5,7 +5,7 @@ const processGetAllRooms = async ({ page, limit, room_type, is_available, min_pr
 	const conditions = [];
 	const values = [];
 
-	if (room_type) {
+	if (room_type !== undefined) {
 		values.push(room_type);
 		conditions.push(`room_type = $${values.length}`);
 	}
@@ -69,4 +69,19 @@ const processCreateRoom = async ({ room_number, room_type, price_per_night, desc
 	}
 };
 
-module.exports = { processGetAllRooms, processCreateRoom };
+const processGetRoomById = async (id) => {
+	const result = await query(
+		`SELECT * FROM rooms WHERE id = $1 AND is_active = TRUE`,
+		[id]
+	);
+
+	if (result.rows.length === 0) {
+		const err = new Error('Room not found');
+		err.statusCode = 404;
+		throw err;
+	}
+
+	return { success: true, data: result.rows[0] };
+};
+
+module.exports = { processGetAllRooms, processCreateRoom, processGetRoomById };
