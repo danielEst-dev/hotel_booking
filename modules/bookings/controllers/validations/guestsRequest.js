@@ -24,7 +24,7 @@ const validateCreateGuestRequest = (form) => {
 		first_name: yup.string().max(100).required(),
 		last_name: yup.string().max(100).required(),
 		email: yup.string().email().max(254).required(),
-		phone: yup.string().max(20).matches(/^\+?[\d\s\-()+]+$/, 'Invalid phone number format').optional(),
+		phone: yup.string().max(25).matches(/^\+?[\d\s\-()]+$/, { message: 'Invalid phone number format', excludeEmptyString: true }).optional(),
 	};
 
 	const schema = yup.object().shape(formShape);
@@ -37,7 +37,7 @@ const validateUpdateGuestRequest = (form) => {
 		first_name: yup.string().max(100).optional(),
 		last_name: yup.string().max(100).optional(),
 		email: yup.string().email().max(254).optional(),
-		phone: yup.string().max(20).matches(/^\+?[\d\s\-()+]+$/, 'Invalid phone number format').optional(),
+		phone: yup.string().max(25).matches(/^\+?[\d\s\-()]+$/, { message: 'Invalid phone number format', excludeEmptyString: true }).optional(),
 	};
 
 	const schema = yup.object().shape(formShape).test(
