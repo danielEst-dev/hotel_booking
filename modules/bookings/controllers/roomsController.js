@@ -81,7 +81,6 @@ const updateRoom = async (req, res) => {
 		let { room_number, room_type, price_per_night, description, is_available } = req.body;
 
 		if (price_per_night !== undefined) price_per_night = Number(price_per_night);
-		if (is_available !== undefined) is_available = normalizeOptionalBoolean(is_available);
 
 		await validateUpdateRoomRequest({ id, room_number, room_type, price_per_night, description, is_available });
 

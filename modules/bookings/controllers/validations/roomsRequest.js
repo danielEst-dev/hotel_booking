@@ -23,7 +23,7 @@ const validateCreateRoomRequest = (form) => {
 	const formShape = {
 		room_number: yup.string().required(),
 		room_type: yup.string().required(),
-		price_per_night: yup.number().min(0).required(),
+		price_per_night: yup.number().positive().required(),
 		description: yup.string().optional(),
 	};
 
@@ -45,7 +45,7 @@ const validateUpdateRoomRequest = (form) => {
 		id: yup.number().integer().min(1).required(),
 		room_number: yup.string().optional(),
 		room_type: yup.string().optional(),
-		price_per_night: yup.number().min(0).optional(),
+		price_per_night: yup.number().positive().optional(),
 		description: yup.string().optional(),
 		is_available: yup.boolean().optional(),
 	};
