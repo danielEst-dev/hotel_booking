@@ -27,7 +27,7 @@ const getAllRooms = async (req, res) => {
 			});
 		}
 
-		return res.status(err.statusCode || 400).send({ success: false, error: err.message });
+		return res.status(err.statusCode || 500).send({ success: false, error: err.message });
 	}
 };
 
@@ -50,7 +50,7 @@ const createRoom = async (req, res) => {
 			});
 		}
 
-		return res.status(err.statusCode || 400).send({ success: false, error: err.message });
+		return res.status(err.statusCode || 500).send({ success: false, error: err.message });
 	}
 };
 
@@ -71,7 +71,7 @@ const getRoomById = async (req, res) => {
 			});
 		}
 
-		return res.status(err.statusCode || 400).send({ success: false, error: err.message });
+		return res.status(err.statusCode || 500).send({ success: false, error: err.message });
 	}
 };
 
@@ -96,7 +96,7 @@ const updateRoom = async (req, res) => {
 			});
 		}
 
-		return res.status(err.statusCode || 400).send({ success: false, error: err.message });
+		return res.status(err.statusCode || 500).send({ success: false, error: err.message });
 	}
 };
 
@@ -117,7 +117,7 @@ const deleteRoom = async (req, res) => {
 			});
 		}
 
-		return res.status(err.statusCode || 400).send({ success: false, error: err.message });
+		return res.status(err.statusCode || 500).send({ success: false, error: err.message });
 	}
 };
 
