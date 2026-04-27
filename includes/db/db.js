@@ -1,4 +1,6 @@
-const { Pool } = require('pg');
+const { Pool, types } = require('pg');
+
+types.setTypeParser(1082, (val) => val);
 const moment = require('moment');
 const { config } = require('../config/mainConfig.js');
 
