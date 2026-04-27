@@ -6,7 +6,7 @@ const processGetAllGuests = async ({ page, limit } = {}) => {
 		`SELECT COUNT(*) FROM guests WHERE is_active = TRUE`,
 		[]
 	);
-	const totalCount = parseInt(countResult.rows[0].count);
+	const totalCount = parseInt(countResult.rows[0].count, 10);
 
 	const { pagination, offset, limit: perPage } = buildPagination(page, limit, totalCount);
 

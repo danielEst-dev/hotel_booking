@@ -33,7 +33,7 @@ const processGetAllRooms = async ({ page, limit, room_type, is_available, min_pr
 		`SELECT COUNT(*) FROM rooms ${whereClause}`,
 		values
 	);
-	const totalCount = parseInt(countResult.rows[0].count);
+	const totalCount = parseInt(countResult.rows[0].count, 10);
 
 	const { pagination, offset, limit: perPage } = buildPagination(page, limit, totalCount);
 
