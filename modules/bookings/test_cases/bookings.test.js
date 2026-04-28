@@ -1,5 +1,8 @@
 jest.mock('../../../includes/db/db.js', () => ({
-	query: jest.fn()
+	query: jest.fn(),
+	pool: {
+		connect: jest.fn(),
+	},
 }));
 
 jest.mock('axios');
@@ -15,6 +18,16 @@ describe('Booking Management', () => {
 	});
 
 	describe('processCreateBooking', () => {
+		let mockClient;
+
+		beforeEach(() => {
+			mockClient = {
+				query: jest.fn(),
+				release: jest.fn(),
+			};
+			db.pool.connect.mockResolvedValue(mockClient);
+		});
+
 		it('should create a booking successfully with weather data', async () => {
 			const mockGuest = { id: 1 };
 			const mockRoom = { id: 2, price_per_night: '100.00' };
@@ -30,11 +43,13 @@ describe('Booking Management', () => {
 			};
 			const mockWeather = { daily: { temperature_2m_max: [18], temperature_2m_min: [10], precipitation_sum: [0] } };
 
-			db.query
-				.mockResolvedValueOnce({ rows: [mockGuest] })
-				.mockResolvedValueOnce({ rows: [mockRoom] })
-				.mockResolvedValueOnce({ rows: [] })
-				.mockResolvedValueOnce({ rows: [mockBooking] });
+			mockClient.query
+				.mockResolvedValueOnce({})                      // BEGIN
+				.mockResolvedValueOnce({ rows: [mockGuest] })   // SELECT guests
+				.mockResolvedValueOnce({ rows: [mockRoom] })    // SELECT rooms FOR UPDATE
+				.mockResolvedValueOnce({ rows: [] })            // conflict check
+				.mockResolvedValueOnce({ rows: [mockBooking] }) // INSERT
+				.mockResolvedValueOnce({});                     // COMMIT
 
 			axios.get.mockResolvedValueOnce({ data: mockWeather });
 
@@ -42,11 +57,13 @@ describe('Booking Management', () => {
 
 			expect(result.success).toBe(true);
 			expect(result.data).toEqual(mockBooking);
-			expect(db.query).toHaveBeenCalledTimes(4);
-			expect(db.query).toHaveBeenLastCalledWith(
+			expect(mockClient.query).toHaveBeenCalledTimes(6);
+			expect(mockClient.query).toHaveBeenNthCalledWith(
+				5,
 				expect.stringContaining('INSERT INTO bookings'),
 				[1, 2, '2026-05-01', '2026-05-03', 200, mockWeather]
 			);
+			expect(mockClient.release).toHaveBeenCalled();
 		});
 
 		it('should create a booking successfully even when weather API fails', async () => {
@@ -63,11 +80,13 @@ describe('Booking Management', () => {
 				weather_data: null,
 			};
 
-			db.query
-				.mockResolvedValueOnce({ rows: [mockGuest] })
-				.mockResolvedValueOnce({ rows: [mockRoom] })
-				.mockResolvedValueOnce({ rows: [] })
-				.mockResolvedValueOnce({ rows: [mockBooking] });
+			mockClient.query
+				.mockResolvedValueOnce({})                      // BEGIN
+				.mockResolvedValueOnce({ rows: [mockGuest] })   // SELECT guests
+				.mockResolvedValueOnce({ rows: [mockRoom] })    // SELECT rooms FOR UPDATE
+				.mockResolvedValueOnce({ rows: [] })            // conflict check
+				.mockResolvedValueOnce({ rows: [mockBooking] }) // INSERT
+				.mockResolvedValueOnce({});                     // COMMIT
 
 			axios.get.mockRejectedValueOnce(new Error('Network error'));
 
@@ -75,10 +94,12 @@ describe('Booking Management', () => {
 
 			expect(result.success).toBe(true);
 			expect(result.data).toEqual(mockBooking);
-			expect(db.query).toHaveBeenLastCalledWith(
+			expect(mockClient.query).toHaveBeenNthCalledWith(
+				5,
 				expect.stringContaining('INSERT INTO bookings'),
 				[1, 2, '2026-06-10', '2026-06-12', 300, null]
 			);
+			expect(mockClient.release).toHaveBeenCalled();
 		});
 
 		it('should throw 400 error when check_out_date is not after check_in_date', async () => {
@@ -89,17 +110,19 @@ describe('Booking Management', () => {
 				statusCode: 400,
 			});
 
-			expect(db.query).not.toHaveBeenCalled();
+			expect(db.pool.connect).not.toHaveBeenCalled();
 		});
 
 		it('should throw 409 error when room has a date conflict', async () => {
 			const mockGuest = { id: 1 };
 			const mockRoom = { id: 2, price_per_night: '100.00' };
 
-			db.query
-				.mockResolvedValueOnce({ rows: [mockGuest] })
-				.mockResolvedValueOnce({ rows: [mockRoom] })
-				.mockResolvedValueOnce({ rows: [{ id: 99 }] });
+			mockClient.query
+				.mockResolvedValueOnce({})                    // BEGIN
+				.mockResolvedValueOnce({ rows: [mockGuest] }) // SELECT guests
+				.mockResolvedValueOnce({ rows: [mockRoom] })  // SELECT rooms FOR UPDATE
+				.mockResolvedValueOnce({ rows: [{ id: 99 }] }) // conflict found
+				.mockResolvedValueOnce({});                   // ROLLBACK
 
 			await expect(
 				processCreateBooking(1, 2, '2026-05-01', '2026-05-03')
@@ -107,6 +130,8 @@ describe('Booking Management', () => {
 				message: 'Room is already booked for the selected dates',
 				statusCode: 409,
 			});
+
+			expect(mockClient.release).toHaveBeenCalled();
 		});
 	});
 
