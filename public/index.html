@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>The Grand — Hotel Management</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link
+		href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap"
+		rel="stylesheet">
+	<link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+	<header class="header">
+		<div class="header-inner">
+			<div class="brand">
+				<div class="brand-rule"></div>
+				<div class="brand-text">
+					<h1 class="brand-name">The Grand</h1>
+					<p class="brand-sub">Hotel Management</p>
+				</div>
+				<div class="brand-rule brand-rule--right"></div>
+			</div>
+			<nav class="nav" id="main-nav">
+				<button class="nav-btn active" data-section="dashboard">
+					<span class="nav-diamond">◆</span> Dashboard
+				</button>
+				<button class="nav-btn" data-section="new-booking">
+					<span class="nav-diamond">◆</span> New Booking
+				</button>
+				<button class="nav-btn" data-section="bookings">
+					<span class="nav-diamond">◆</span> All Bookings
+				</button>
+				<button class="nav-btn" data-section="rooms-mgmt">
+					<span class="nav-diamond">◆</span> Rooms
+				</button>
+				<button class="nav-btn" data-section="guests-mgmt">
+					<span class="nav-diamond">◆</span> Guests
+				</button>
+			</nav>
+		</div>
+	</header>
+
+	<main class="main">
+
+		<!-- ================================================
+		     DASHBOARD
+		     ================================================ -->
+		<section id="dashboard" class="section active">
+			<div class="container">
+
+				<div class="section-header">
+					<div class="rule"></div>
+					<h2 class="section-title">Dashboard</h2>
+					<div class="rule"></div>
+				</div>
+
+				<div id="weather-card" class="weather-card">
+					<div class="loading-state">
+						<div class="spinner"></div>
+						<span>Fetching weather…</span>
+					</div>
+				</div>
+
+				<div class="rooms-header">
+					<h3 class="subsection-title">Available Rooms</h3>
+					<div class="rooms-controls">
+						<select id="filter-type" class="select-sm">
+							<option value="">All Types</option>
+							<option value="single">Single</option>
+							<option value="double">Double</option>
+							<option value="suite">Suite</option>
+							<option value="deluxe">Deluxe</option>
+						</select>
+						<input type="number" id="filter-min-price" class="input-sm" placeholder="Min £" min="0">
+						<input type="number" id="filter-max-price" class="input-sm" placeholder="Max £" min="0">
+						<button class="btn btn-ghost btn-sm" id="refresh-rooms">↻ Refresh</button>
+					</div>
+				</div>
+
+				<div id="rooms-grid" class="rooms-grid">
+					<div class="loading-state">
+						<div class="spinner"></div>
+						<span>Loading rooms…</span>
+					</div>
+				</div>
+
+			</div>
+		</section>
+
+		<!-- ================================================
+		     NEW BOOKING
+		     ================================================ -->
+		<section id="new-booking" class="section">
+			<div class="container">
+
+				<div class="section-header">
+					<div class="rule"></div>
+					<h2 class="section-title">New Booking</h2>
+					<div class="rule"></div>
+				</div>
+
+				<div class="booking-layout">
+
+					<!-- Guest Panel -->
+					<div class="panel">
+						<div class="panel-head">
+							<h3 class="panel-title">Guest Information</h3>
+							<div class="toggle-group">
+								<button class="toggle-btn active" id="mode-new" data-mode="new">New</button>
+								<button class="toggle-btn" id="mode-existing" data-mode="existing">Existing</button>
+							</div>
+						</div>
+
+						<div id="new-guest-form">
+							<div class="field-row">
+								<div class="field">
+									<label class="label" for="first_name">First Name</label>
+									<input class="input" type="text" id="first_name" placeholder="Jane">
+								</div>
+								<div class="field">
+									<label class="label" for="last_name">Last Name</label>
+									<input class="input" type="text" id="last_name" placeholder="Smith">
+								</div>
+							</div>
+							<div class="field">
+								<label class="label" for="email">Email Address</label>
+								<input class="input" type="email" id="email" placeholder="jane@example.com">
+							</div>
+							<div class="field">
+								<label class="label" for="phone">Phone Number</label>
+								<input class="input" type="tel" id="phone" placeholder="+44 7700 900000">
+							</div>
+						</div>
+
+						<div id="existing-guest-form" class="hidden">
+							<div class="field">
+								<label class="label" for="guest-search">Search by name or email</label>
+								<input class="input" type="text" id="guest-search" placeholder="Type to search…"
+									autocomplete="off">
+							</div>
+							<div id="guest-results" class="guest-results"></div>
+							<div id="selected-guest" class="selected-guest hidden"></div>
+						</div>
+					</div>
+
+					<!-- Booking Details Panel -->
+					<div class="panel">
+						<div class="panel-head">
+							<h3 class="panel-title">Booking Details</h3>
+						</div>
+
+						<div class="field">
+							<label class="label" for="room-select">Room</label>
+							<select class="input" id="room-select">
+								<option value="">Loading rooms…</option>
+							</select>
+						</div>
+
+						<div class="field-row">
+							<div class="field">
+								<label class="label" for="check_in_date">Check-in</label>
+								<input class="input" type="date" id="check_in_date">
+							</div>
+							<div class="field">
+								<label class="label" for="check_out_date">Check-out</label>
+								<input class="input" type="date" id="check_out_date">
+							</div>
+						</div>
+
+						<div class="price-preview hidden" id="price-preview">
+							<div class="price-row">
+								<span class="price-label">Rate</span>
+								<span class="price-val" id="rate-val">—</span>
+							</div>
+							<div class="price-row">
+								<span class="price-label">Duration</span>
+								<span class="price-val" id="nights-val">—</span>
+							</div>
+							<div class="price-row price-row--total">
+								<span class="price-label">Total</span>
+								<span class="price-val" id="total-val">—</span>
+							</div>
+						</div>
+
+						<button class="btn btn-gold btn-full" id="submit-booking">
+							<span id="submit-text">Create Booking</span>
+						</button>
+					</div>
+
+				</div>
+			</div>
+		</section>
+
+		<!-- ================================================
+		     ALL BOOKINGS
+		     ================================================ -->
+		<section id="bookings" class="section">
+			<div class="container">
+
+				<div class="section-header">
+					<div class="rule"></div>
+					<h2 class="section-title">All Bookings</h2>
+					<div class="rule"></div>
+				</div>
+
+				<div class="bookings-bar">
+					<div class="pills" id="status-filters">
+						<button class="pill active" data-status="">All</button>
+						<button class="pill" data-status="pending">Pending</button>
+						<button class="pill" data-status="confirmed">Confirmed</button>
+						<button class="pill" data-status="completed">Completed</button>
+						<button class="pill" data-status="cancelled">Cancelled</button>
+					</div>
+					<button class="btn btn-ghost btn-sm" id="refresh-bookings">↻ Refresh</button>
+				</div>
+
+				<div id="bookings-container">
+					<div class="loading-state">
+						<div class="spinner"></div>
+						<span>Loading bookings…</span>
+					</div>
+				</div>
+
+				<div class="pagination" id="pagination"></div>
+
+			</div>
+		</section>
+
+		<!-- ================================================
+		     ROOMS MANAGEMENT
+		     ================================================ -->
+		<section id="rooms-mgmt" class="section">
+			<div class="container">
+
+				<div class="section-header">
+					<div class="rule"></div>
+					<h2 class="section-title">Room Management</h2>
+					<div class="rule"></div>
+				</div>
+
+				<div class="section-toolbar">
+					<button class="btn btn-gold btn-sm" id="add-room-btn">+ Add Room</button>
+					<button class="btn btn-ghost btn-sm" id="refresh-rooms-mgmt">↻ Refresh</button>
+				</div>
+
+				<div class="filter-bar">
+					<select id="rmf-type" class="select-sm">
+						<option value="">All Types</option>
+						<option value="single">Single</option>
+						<option value="double">Double</option>
+						<option value="suite">Suite</option>
+						<option value="deluxe">Deluxe</option>
+					</select>
+					<select id="rmf-available" class="select-sm">
+						<option value="">All</option>
+						<option value="true">Available</option>
+						<option value="false">Unavailable</option>
+					</select>
+					<input type="number" id="rmf-min-price" class="input-sm" placeholder="Min £" min="0">
+					<input type="number" id="rmf-max-price" class="input-sm" placeholder="Max £" min="0">
+				</div>
+
+				<div id="rooms-mgmt-container">
+					<div class="loading-state">
+						<div class="spinner"></div>
+						<span>Loading rooms…</span>
+					</div>
+				</div>
+
+				<div class="pagination" id="rooms-mgmt-pagination"></div>
+
+			</div>
+		</section>
+
+		<!-- ================================================
+		     GUESTS MANAGEMENT
+		     ================================================ -->
+		<section id="guests-mgmt" class="section">
+			<div class="container">
+
+				<div class="section-header">
+					<div class="rule"></div>
+					<h2 class="section-title">Guests</h2>
+					<div class="rule"></div>
+				</div>
+
+				<div class="section-toolbar">
+					<button class="btn btn-ghost btn-sm" id="refresh-guests-btn">↻ Refresh</button>
+				</div>
+
+				<div id="guests-container">
+					<div class="loading-state">
+						<div class="spinner"></div>
+						<span>Loading guests…</span>
+					</div>
+				</div>
+
+				<div class="pagination" id="guests-pagination"></div>
+
+			</div>
+		</section>
+
+	</main>
+
+	<!-- Modal -->
+	<div id="modal-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true">
+		<div class="modal" id="modal">
+			<div class="modal-head">
+				<h3 class="modal-title" id="modal-title"></h3>
+				<button class="modal-close" id="modal-close">&times;</button>
+			</div>
+			<div class="modal-body" id="modal-body"></div>
+		</div>
+	</div>
+
+	<div id="toast-container" aria-live="polite" aria-atomic="false"></div>
+
+	<script src="js/app.js"></script>
+</body>
+
+</html>
