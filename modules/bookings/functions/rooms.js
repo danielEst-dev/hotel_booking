@@ -1,4 +1,4 @@
-const { query } = require('../../../includes/db/db.js');
+const { pool, query } = require('../../../includes/db/db.js');
 const { buildPagination } = require('../../../helpers/functions/customFunctions.js');
 
 const processGetAllRooms = async ({ page, limit, room_type, is_available, min_price, max_price } = {}) => {
@@ -142,31 +142,42 @@ const processUpdateRoom = async (id, fields) => {
 };
 
 const processDeleteRoom = async (id) => {
-	const roomCheck = await query(
-		`SELECT id FROM rooms WHERE id = $1 AND is_active = TRUE`,
-		[id]
-	);
-	if (roomCheck.rows.length === 0) {
-		const err = new Error('Room not found');
-		err.statusCode = 404;
-		throw err;
-	}
+	const client = await pool.connect();
+	try {
+		await client.query('BEGIN');
 
-	const bookingCheck = await query(
-		`SELECT id FROM bookings WHERE room_id = $1 LIMIT 1`,
-		[id]
-	);
-
-	if (bookingCheck.rows.length > 0) {
-		await query(
-			`UPDATE rooms SET is_active = FALSE WHERE id = $1`,
+		const roomCheck = await client.query(
+			`SELECT id FROM rooms WHERE id = $1 AND is_active = TRUE FOR UPDATE`,
 			[id]
 		);
-		return { success: true, deleted: false };
-	}
+		if (roomCheck.rows.length === 0) {
+			const err = new Error('Room not found');
+			err.statusCode = 404;
+			throw err;
+		}
 
-	await query(`DELETE FROM rooms WHERE id = $1`, [id]);
-	return { success: true, deleted: true };
+		const bookingCheck = await client.query(
+			`SELECT id FROM bookings WHERE room_id = $1 LIMIT 1`,
+			[id]
+		);
+
+		let result;
+		if (bookingCheck.rows.length > 0) {
+			await client.query(`UPDATE rooms SET is_active = FALSE WHERE id = $1`, [id]);
+			result = { success: true, deleted: false };
+		} else {
+			await client.query(`DELETE FROM rooms WHERE id = $1`, [id]);
+			result = { success: true, deleted: true };
+		}
+
+		await client.query('COMMIT');
+		return result;
+	} catch (err) {
+		await client.query('ROLLBACK');
+		throw err;
+	} finally {
+		client.release();
+	}
 };
 
 module.exports = { processGetAllRooms, processCreateRoom, processGetRoomById, processUpdateRoom, processDeleteRoom };

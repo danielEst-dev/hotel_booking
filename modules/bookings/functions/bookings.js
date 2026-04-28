@@ -1,6 +1,6 @@
 const axios = require('axios');
 const moment = require('moment');
-const { query } = require('../../../includes/db/db.js');
+const { pool, query } = require('../../../includes/db/db.js');
 const { buildPagination } = require('../../../helpers/functions/customFunctions.js');
 
 const fetchWeatherForDate = async (date) => {
@@ -72,54 +72,65 @@ const processCreateBooking = async (guest_id, room_id, check_in_date, check_out_
 		throw err;
 	}
 
-	const guestResult = await query(
-		`SELECT id FROM guests WHERE id = $1 AND is_active = TRUE`,
-		[guest_id]
-	);
-	if (guestResult.rows.length === 0) {
-		const err = new Error('Guest not found');
-		err.statusCode = 404;
-		throw err;
-	}
-
-	const roomResult = await query(
-		`SELECT id, price_per_night FROM rooms WHERE id = $1 AND is_active = TRUE AND is_available = TRUE`,
-		[room_id]
-	);
-	if (roomResult.rows.length === 0) {
-		const err = new Error('Room not found or not available');
-		err.statusCode = 404;
-		throw err;
-	}
-
-	const conflictResult = await query(
-		`SELECT id FROM bookings
-		WHERE room_id = $1
-		AND status NOT IN ('cancelled')
-		AND check_in_date < $3
-		AND check_out_date > $2`,
-		[room_id, check_in_date, check_out_date]
-	);
-	if (conflictResult.rows.length > 0) {
-		const err = new Error('Room is already booked for the selected dates');
-		err.statusCode = 409;
-		throw err;
-	}
-
-	const price_per_night = parseFloat(roomResult.rows[0].price_per_night);
-	const nights = moment.utc(check_out_date).diff(moment.utc(check_in_date), 'days');
-	const total_price = price_per_night * nights;
-
 	const weather_data = await fetchWeatherForDate(check_in_date);
 
-	const result = await query(
-		`INSERT INTO bookings (guest_id, room_id, check_in_date, check_out_date, total_price, weather_data)
-		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING *`,
-		[guest_id, room_id, check_in_date, check_out_date, total_price, weather_data ?? null]
-	);
+	const client = await pool.connect();
+	try {
+		await client.query('BEGIN');
 
-	return { success: true, data: result.rows[0] };
+		const guestResult = await client.query(
+			`SELECT id FROM guests WHERE id = $1 AND is_active = TRUE`,
+			[guest_id]
+		);
+		if (guestResult.rows.length === 0) {
+			const err = new Error('Guest not found');
+			err.statusCode = 404;
+			throw err;
+		}
+
+		const roomResult = await client.query(
+			`SELECT id, price_per_night FROM rooms WHERE id = $1 AND is_active = TRUE AND is_available = TRUE FOR UPDATE`,
+			[room_id]
+		);
+		if (roomResult.rows.length === 0) {
+			const err = new Error('Room not found or not available');
+			err.statusCode = 404;
+			throw err;
+		}
+
+		const conflictResult = await client.query(
+			`SELECT id FROM bookings
+			WHERE room_id = $1
+			AND status NOT IN ('cancelled')
+			AND check_in_date < $3
+			AND check_out_date > $2`,
+			[room_id, check_in_date, check_out_date]
+		);
+		if (conflictResult.rows.length > 0) {
+			const err = new Error('Room is already booked for the selected dates');
+			err.statusCode = 409;
+			throw err;
+		}
+
+		const price_per_night = parseFloat(roomResult.rows[0].price_per_night);
+		const nights = moment.utc(check_out_date).diff(moment.utc(check_in_date), 'days');
+		const total_price = price_per_night * nights;
+
+		const result = await client.query(
+			`INSERT INTO bookings (guest_id, room_id, check_in_date, check_out_date, total_price, weather_data)
+			VALUES ($1, $2, $3, $4, $5, $6)
+			RETURNING *`,
+			[guest_id, room_id, check_in_date, check_out_date, total_price, weather_data ?? null]
+		);
+
+		await client.query('COMMIT');
+		return { success: true, data: result.rows[0] };
+	} catch (err) {
+		await client.query('ROLLBACK');
+		throw err;
+	} finally {
+		client.release();
+	}
 };
 
 const processGetBookingById = async (id) => {
