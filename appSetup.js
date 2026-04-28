@@ -11,6 +11,10 @@ app.use(express.static('public'));
 const { router: bookingsRouter } = require('./routers/bookingsRouter.js');
 app.use('/bookings', bookingsRouter);
 
+app.get('/docs', (req, res) => {
+	res.sendFile('HotelBooking-documentation.html', { root: __dirname });
+});
+
 // 404 handler
 app.use((req, res) => {
 	res.status(404).json({ success: false, error: 'Route not found' });
