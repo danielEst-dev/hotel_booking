@@ -4,6 +4,7 @@ const validateGetAllGuestsRequest = (form) => {
 	const formShape = {
 		page: yup.number().integer().min(1).optional(),
 		limit: yup.number().integer().min(1).max(100).optional(),
+		search: yup.string().max(100).optional(),
 	};
 
 	const schema = yup.object().shape(formShape);

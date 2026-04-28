@@ -1,18 +1,29 @@
 const { query } = require('../../../includes/db/db.js');
 const { buildPagination } = require('../../../helpers/functions/customFunctions.js');
 
-const processGetAllGuests = async ({ page, limit } = {}) => {
+const processGetAllGuests = async ({ page, limit, search } = {}) => {
+	const conditions = ['is_active = TRUE'];
+	const values = [];
+
+	if (search) {
+		values.push(`%${search}%`);
+		conditions.push(`(first_name ILIKE $${values.length} OR last_name ILIKE $${values.length} OR email ILIKE $${values.length})`);
+	}
+
+	const whereClause = `WHERE ${conditions.join(' AND ')}`;
+
 	const countResult = await query(
-		`SELECT COUNT(*) FROM guests WHERE is_active = TRUE`,
-		[]
+		`SELECT COUNT(*) FROM guests ${whereClause}`,
+		values
 	);
 	const totalCount = parseInt(countResult.rows[0].count, 10);
 
 	const { pagination, offset, limit: perPage } = buildPagination(page, limit, totalCount);
 
+	const dataValues = [...values, perPage, offset];
 	const dataResult = await query(
-		`SELECT * FROM guests WHERE is_active = TRUE ORDER BY id ASC LIMIT $1 OFFSET $2`,
-		[perPage, offset]
+		`SELECT * FROM guests ${whereClause} ORDER BY id ASC LIMIT $${dataValues.length - 1} OFFSET $${dataValues.length}`,
+		dataValues
 	);
 
 	return {

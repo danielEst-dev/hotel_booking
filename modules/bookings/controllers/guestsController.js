@@ -4,10 +4,11 @@ const { normalizeOptionalNumber } = require('../../../helpers/functions/customFu
 
 const getAllGuests = async (req, res) => {
 	try {
-		const { page, limit } = req.query;
+		const { page, limit, search } = req.query;
 		const form = {
 			page: normalizeOptionalNumber(page),
 			limit: normalizeOptionalNumber(limit),
+			search: search || undefined,
 		};
 
 		await validateGetAllGuestsRequest(form);
