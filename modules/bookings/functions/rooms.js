@@ -142,18 +142,31 @@ const processUpdateRoom = async (id, fields) => {
 };
 
 const processDeleteRoom = async (id) => {
-	const result = await query(
-		`UPDATE rooms SET is_active = FALSE WHERE id = $1 AND is_active = TRUE RETURNING id`,
+	const roomCheck = await query(
+		`SELECT id FROM rooms WHERE id = $1 AND is_active = TRUE`,
 		[id]
 	);
-
-	if (result.rows.length === 0) {
+	if (roomCheck.rows.length === 0) {
 		const err = new Error('Room not found');
 		err.statusCode = 404;
 		throw err;
 	}
 
-	return { success: true };
+	const bookingCheck = await query(
+		`SELECT id FROM bookings WHERE room_id = $1 LIMIT 1`,
+		[id]
+	);
+
+	if (bookingCheck.rows.length > 0) {
+		await query(
+			`UPDATE rooms SET is_active = FALSE WHERE id = $1`,
+			[id]
+		);
+		return { success: true, deleted: false };
+	}
+
+	await query(`DELETE FROM rooms WHERE id = $1`, [id]);
+	return { success: true, deleted: true };
 };
 
 module.exports = { processGetAllRooms, processCreateRoom, processGetRoomById, processUpdateRoom, processDeleteRoom };

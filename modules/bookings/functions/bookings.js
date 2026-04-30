@@ -22,7 +22,16 @@ const fetchWeatherForDate = async (date) => {
 	}
 };
 
+const autoCompleteExpiredBookings = async () => {
+	await query(
+		`UPDATE bookings SET status = 'completed', updated_at = NOW()
+		WHERE status = 'confirmed' AND check_out_date < CURRENT_DATE`
+	);
+};
+
 const processGetAllBookings = async ({ page, limit, status } = {}) => {
+	await autoCompleteExpiredBookings();
+
 	const conditions = [];
 	const values = [];
 
@@ -116,6 +125,8 @@ const processCreateBooking = async (guest_id, room_id, check_in_date, check_out_
 };
 
 const processGetBookingById = async (id) => {
+	await autoCompleteExpiredBookings();
+
 	const result = await query(
 		`SELECT b.*,
 			g.first_name, g.last_name, g.email,
@@ -171,19 +182,40 @@ const processUpdateBooking = async (id, fields) => {
 const processCancelBooking = async (id) => {
 	const result = await query(
 		`UPDATE bookings SET status = 'cancelled', updated_at = NOW()
-		WHERE id = $1 AND status != 'cancelled'
+		WHERE id = $1
+		  AND status NOT IN ('cancelled', 'completed')
+		  AND check_out_date >= CURRENT_DATE
 		RETURNING id`,
 		[id]
 	);
 
 	if (result.rows.length === 0) {
-		const check = await query(`SELECT id FROM bookings WHERE id = $1`, [id]);
+		const check = await query(
+			`SELECT id, status, check_out_date FROM bookings WHERE id = $1`,
+			[id]
+		);
 		if (check.rows.length === 0) {
 			const err = new Error('Booking not found');
 			err.statusCode = 404;
 			throw err;
 		}
-		const err = new Error('Booking is already cancelled');
+		const { status, check_out_date } = check.rows[0];
+		if (status === 'cancelled') {
+			const err = new Error('Booking is already cancelled');
+			err.statusCode = 409;
+			throw err;
+		}
+		if (status === 'completed') {
+			const err = new Error('Completed bookings cannot be cancelled');
+			err.statusCode = 409;
+			throw err;
+		}
+		if (new Date(check_out_date) < new Date(new Date().toISOString().slice(0, 10))) {
+			const err = new Error('Past bookings cannot be cancelled');
+			err.statusCode = 409;
+			throw err;
+		}
+		const err = new Error('Booking cannot be cancelled');
 		err.statusCode = 409;
 		throw err;
 	}
