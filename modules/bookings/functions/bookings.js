@@ -30,8 +30,6 @@ const autoCompleteExpiredBookings = async () => {
 };
 
 const processGetAllBookings = async ({ page, limit, status } = {}) => {
-	await autoCompleteExpiredBookings();
-
 	const conditions = [];
 	const values = [];
 
@@ -125,8 +123,6 @@ const processCreateBooking = async (guest_id, room_id, check_in_date, check_out_
 };
 
 const processGetBookingById = async (id) => {
-	await autoCompleteExpiredBookings();
-
 	const result = await query(
 		`SELECT b.*,
 			g.first_name, g.last_name, g.email,
@@ -259,6 +255,7 @@ const processGetBookingsByGuestId = async (guest_id, { page, limit } = {}) => {
 };
 
 module.exports = {
+	autoCompleteExpiredBookings,
 	fetchWeatherForDate,
 	processGetAllBookings,
 	processCreateBooking,
