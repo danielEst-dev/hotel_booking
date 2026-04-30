@@ -40,7 +40,7 @@ const createRoom = async (req, res) => {
 		await validateCreateRoomRequest({ room_number, room_type, price_per_night, description });
 
 		const result = await processCreateRoom({ room_number, room_type, price_per_night, description });
-		return res.status(200).send({ ...result });
+		return res.status(201).send({ ...result });
 	} catch (err) {
 		if (err?.name === 'ValidationError') {
 			return res.status(400).json({

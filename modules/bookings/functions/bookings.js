@@ -68,7 +68,7 @@ const processGetAllBookings = async ({ page, limit, status } = {}) => {
 };
 
 const processCreateBooking = async (guest_id, room_id, check_in_date, check_out_date) => {
-	if (check_out_date <= check_in_date) {
+	if (!moment.utc(check_out_date).isAfter(moment.utc(check_in_date))) {
 		const err = new Error('check_out_date must be after check_in_date');
 		err.statusCode = 400;
 		throw err;
@@ -210,7 +210,7 @@ const processCancelBooking = async (id) => {
 			err.statusCode = 409;
 			throw err;
 		}
-		if (new Date(check_out_date) < new Date(new Date().toISOString().slice(0, 10))) {
+		if (moment.utc(check_out_date).isBefore(moment.utc().startOf('day'))) {
 			const err = new Error('Past bookings cannot be cancelled');
 			err.statusCode = 409;
 			throw err;
